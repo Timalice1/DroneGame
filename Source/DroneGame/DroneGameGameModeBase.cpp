@@ -3,3 +3,6 @@
 
 #include "DroneGameGameModeBase.h"
 
+void ADroneGameGameModeBase::BeginPlay()
+{
+}

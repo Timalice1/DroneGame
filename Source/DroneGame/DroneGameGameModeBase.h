@@ -14,4 +14,7 @@ class DRONEGAME_API ADroneGameGameModeBase : public AGameModeBase
 {
 	GENERATED_BODY()
 	
+
+protected:
+	virtual void BeginPlay() override;
 };
