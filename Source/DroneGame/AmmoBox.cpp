@@ -3,6 +3,8 @@
 AAmmoBox::AAmmoBox() : Super()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	static ConstructorHelpers::FObjectFinder<UStaticMesh>MeshAsset(TEXT("/Script/Engine.StaticMesh'/Game/Assets/Meshes/AmmoBox/AmmoBox.AmmoBox'"));
+	Mesh->SetStaticMesh(MeshAsset.Object);
 }
 
 void AAmmoBox::BeginPlay()

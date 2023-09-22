@@ -3,6 +3,9 @@
 AMedkit::AMedkit() : Super()
 {
 	PrimaryActorTick.bCanEverTick = true;
+	static ConstructorHelpers::FObjectFinder<UStaticMesh>MeshAsset(TEXT("/Script/Engine.StaticMesh'/Game/Assets/Meshes/Medkit/first_aid_box.first_aid_box'"));
+	Mesh->SetStaticMesh(MeshAsset.Object);
+	this->RestoreValue = RestoreValue;
 }
 
 void AMedkit::BeginPlay()

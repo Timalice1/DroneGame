@@ -6,6 +6,8 @@
 #include "Components/WidgetComponent.h"
 #include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystem.h"
+#include "Kismet/KismetMathLibrary.h"
 #include "Turret.generated.h"
 
 UCLASS()
@@ -30,10 +32,14 @@ protected:
 	UPROPERTY(EditDefaultsOnly, meta = (ClampMin = 0), Category = Stats)
 	float MaxHealth = 1000.0f;
 
+	UPROPERTY(editDefaultsOnly, Category = FX)
+	UParticleSystem* ExplosionParticles;
+
+	UPROPERTY(editDefaultsOnly, Category = FX)
+	USoundBase* ExplosionSound;
+
 	void Attack();
-
 	void Death();
-
 	virtual float TakeDamage(float DamageAmount,
 		struct FDamageEvent const& DamageEvent,
 		class AController* EventInstigator,

@@ -1,8 +1,9 @@
 #include "Turret.h"
 #include "DrawDebugHelpers.h"
-#include "Kismet/KismetMathLibrary.h"
+#include "AmmoBox.h"
+#include "Medkit.h"
 
-ATurret::ATurret()
+ATurret::ATurret() : Super()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
@@ -44,6 +45,15 @@ void ATurret::Attack()
 	}
 }
 
+float ATurret::GetCurrentHealth()
+{
+	return CurrerntHealth;
+}
+
+float ATurret::GetMaxHealth()
+{
+	return MaxHealth;
+}
 
 float ATurret::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
@@ -61,17 +71,24 @@ float ATurret::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, A
 
 void ATurret::Death()
 {
+	//Play FX
+	FTransform _explosionTransform = FTransform(FRotator::ZeroRotator, GetActorLocation(), FVector(10, 10, 10));
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), ExplosionParticles, _explosionTransform);
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), ExplosionSound, GetActorLocation());
+
+	//Drop loot
+	FVector _spawnLocation = GetActorLocation() + GetActorForwardVector() * 500;
+	if (FMath::RandBool()) {
+		if (FMath::RandBool())
+			GetWorld()->SpawnActor<AAmmoBox>(_spawnLocation, FRotator::ZeroRotator);
+		else 
+			GetWorld()->SpawnActor<AMedkit>(_spawnLocation, FRotator::ZeroRotator);
+	}
+
 	bIsAlive = false;
 	Mesh->SetSimulatePhysics(true);
 	GetWorldTimerManager().ClearTimer(ShootingTimer);
+
 }
 
-float ATurret::GetCurrentHealth()
-{
-	return CurrerntHealth;
-}
 
-float ATurret::GetMaxHealth()
-{
-	return MaxHealth;
-}

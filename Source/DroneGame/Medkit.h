@@ -24,9 +24,9 @@ protected:
 		const FHitResult& SweepResult) override;
 	
 	UPROPERTY(EditDefaultsOnly, meta = (ClampMin = 0))
-	float RestoreValue;
+	float RestoreValue = 200.0f;
 	
 	UPROPERTY(EditDefaultsOnly, meta = (ClampMin = 0))
-	float RandomDeviation;
+	float RandomDeviation = 50.0f;
 
 };
