@@ -2,18 +2,26 @@
 
 
 #include "Drone.h"
+#include "DrawDebugHelpers.h"
+
 
 ADrone::ADrone()
 {
 	PrimaryActorTick.bCanEverTick = true;
 	bUseControllerRotationYaw = true;
 
-	Collider = CreateDefaultSubobject<USphereComponent>(TEXT("Collider"));
-	Collider->SetCollisionProfileName(TEXT("Pawn"));
+	Collider = CreateDefaultSubobject<USphereComponent>("Collider");
+	Collider->SetCollisionProfileName("Pawn");
 	RootComponent = Collider;
 
-	PawnMovement = CreateDefaultSubobject<UFloatingPawnMovement>(TEXT("PawnMovement"));
-	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>(TEXT("DroneMesh"));
+	PawnMovement = CreateDefaultSubobject<UFloatingPawnMovement>("PawnMovement");
+
+	Camera = CreateDefaultSubobject<UCameraComponent>("FPV_Camera");
+	Camera->AttachToComponent(Collider, FAttachmentTransformRules::KeepRelativeTransform);
+	Camera->bUsePawnControlRotation = true;
+
+	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>("DroneMesh");
+	Mesh->AttachToComponent(Camera, FAttachmentTransformRules::KeepRelativeTransform);
 }
 
 void ADrone::BeginPlay()
@@ -23,6 +31,15 @@ void ADrone::BeginPlay()
 	PawnMovement->Acceleration = Acceleration;
 	PawnMovement->Deceleration = Deceleration;
 	PawnMovement->MaxSpeed = MaxSpeed;
+
+	AmmoLeft = MagazineSize;
+	CurrentHealth = MaxHealth/2;
+
+
+	APlayerController* controller = GetWorld()->GetFirstPlayerController();
+	UUserWidget* DroneHUD = CreateWidget<UUserWidget>(controller, DroneHUD_Widget);
+	DroneHUD->AddToViewport();
+
 }
 
 void ADrone::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
@@ -36,11 +53,9 @@ void ADrone::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ADrone::StartShooting);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ADrone::StopShooting);
-
 }
 
-#pragma region Movement
-
+//Movements
 void ADrone::MoveForward(float AxisValue)
 {
 	AddMovementInput(GetActorForwardVector() * AxisValue);
@@ -56,17 +71,44 @@ void ADrone::MoveUp(float AxisValue)
 	AddMovementInput(GetActorUpVector() * AxisValue);
 }
 
-#pragma endregion
-
+//Shooting
 void ADrone::StartShooting(){
+
+	if (AmmoLeft == 0) {
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), emptySound, GetActorLocation());
+		StopShooting();
+		return;
+	}
+
 	Fire();
-	GetWorldTimerManager().SetTimer(FireRateTimer, this, &ADrone::Fire, FireRate, true);
+	GetWorldTimerManager().SetTimer(FireTimer, this, &ADrone::Fire, FireRate, true);
 }
 
 void ADrone::StopShooting(){
-	GetWorldTimerManager().ClearTimer(FireRateTimer);
+	GetWorldTimerManager().ClearTimer(FireTimer);
 }
 
 void ADrone::Fire(){
-	GEngine->AddOnScreenDebugMessage(-1, 2.0f, FColor::Cyan, FString::Printf(TEXT("Fire")));
+
+	if (AmmoLeft == 0) {
+		UGameplayStatics::PlaySoundAtLocation(GetWorld(), emptySound, GetActorLocation());
+		StopShooting();
+		return;
+	}
+
+	FHitResult hit;
+
+	FVector start = Camera->GetComponentLocation();
+	FVector end = start + (Camera->GetForwardVector() * FireRange);
+
+	FCollisionQueryParams queryParams = FCollisionQueryParams("FireTrace", false, this);
+
+	if (GetWorld()->LineTraceSingleByChannel(hit, start, end, ECC_Visibility, queryParams)) {
+		UGameplayStatics::ApplyDamage(hit.GetActor(), Damage, GetInstigatorController(), this, damageTypeClass);
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Impact, hit.Location, FRotator::ZeroRotator);
+	}
+
+	AmmoLeft--;
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), fireSound, GetActorLocation());
+	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleFlash, Mesh->GetSocketTransform("Muzzle"));
 }

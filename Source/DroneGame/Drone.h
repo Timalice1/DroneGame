@@ -7,6 +7,10 @@
 #include "GameFramework/FloatingPawnMovement.h"
 #include "Components/SkeletalMeshComponent.h"
 #include "Components/SphereComponent.h"
+#include "Camera/CameraComponent.h"
+#include "Kismet/GameplayStatics.h"
+#include "Particles/ParticleSystem.h"
+#include "Blueprint/UserWidget.h"
 #include "Drone.generated.h"
 
 UCLASS()
@@ -21,15 +25,80 @@ public:
 protected:
 	virtual void BeginPlay() override;
 
-//Components
 protected:
-	UPROPERTY(EditAnywhere, Category = "Drone");
+#pragma region Components
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly);
 	USphereComponent* Collider;
 
 	UFloatingPawnMovement* PawnMovement;
 
-	UPROPERTY(EditAnywhere, Category = "Drone")
+	UPROPERTY(EditDefaultsOnly)
 	USkeletalMeshComponent* Mesh;
+
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
+	UCameraComponent* Camera;
+
+#pragma endregion
+
+#pragma region Movement properties
+
+	UPROPERTY(EditAnywhere, meta = (ClampMin = 0), Category = Movement)
+	float MaxSpeed = 1200.0f;
+
+	UPROPERTY(EditAnywhere, meta = (ClampMin = 0), Category = Movement)
+	float Acceleration = 800.0f;
+
+	UPROPERTY(EditAnywhere, meta = (ClampMin = 0), Category = Movement)
+	float Deceleration = 1200.0f;
+
+#pragma endregion
+
+#pragma region Weapon properties
+
+	UPROPERTY(EditAnywhere, meta = (ClampMin = 0), Category = Weapon)
+	float FireRate = .1f;
+
+	UPROPERTY(EditAnywhere, meta = (ClampMin = 0), Category = Weapon)
+	float Damage = 100.0f;
+
+	UPROPERTY(EditAnywhere, meta = (ClampMin = 0), Category = Weapon)
+	float FireRange = 5000.0f;
+#pragma endregion
+
+#pragma region FX
+
+	UPROPERTY(EditDefaultsOnly, Category = FX)
+	USoundBase* fireSound;
+
+	UPROPERTY(EditDefaultsOnly, Category = FX)
+	USoundBase* emptySound;
+	
+	UPROPERTY(EditDefaultsOnly, Category = FX)
+	UParticleSystem* MuzzleFlash;
+	
+	UPROPERTY(EditDefaultsOnly, Category = FX)
+	UParticleSystem* Impact;
+
+
+#pragma endregion
+
+	UPROPERTY(EditDefaultsOnly)
+	TSubclassOf<UUserWidget> DroneHUD_Widget;
+
+public:
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ClampMin = 0), Category = Weapon)
+	int MagazineSize = 50;
+
+	UPROPERTY(BlueprintReadOnly, Category = Weapon)
+	int AmmoLeft;
+
+	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ClampMin = 0), Category = Stats)
+	float MaxHealth = 1000.0f;
+
+	UPROPERTY(BlueprintReadOnly, Category = Stats)
+	float CurrentHealth;
 
 //Actions
 protected:
@@ -41,20 +110,7 @@ protected:
 	void StopShooting();
 	void Fire();
 
-//Drone properties
-protected:
-	UPROPERTY(EditAnywhere, meta = (ClampMin = 0))
-	float MaxSpeed = 1200.0f;
-
-	UPROPERTY(EditAnywhere, meta = (ClampMin = 0))
-	float Acceleration = 800.0f;
-
-	UPROPERTY(EditAnywhere, meta = (ClampMin = 0))
-	float Deceleration = 1200.0f;
-
-	UPROPERTY(EditAnywhere, meta = (ClampMin = 0))
-	float FireRate;
-
 private: 
-	FTimerHandle FireRateTimer;
+	TSubclassOf<UDamageType> damageTypeClass;
+	FTimerHandle FireTimer;
 };

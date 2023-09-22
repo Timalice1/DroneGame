@@ -8,7 +8,7 @@ public class DroneGame : ModuleRules
 	{
 		PCHUsage = PCHUsageMode.UseExplicitOrSharedPCHs;
 	
-		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "Kismet"});
+		PublicDependencyModuleNames.AddRange(new string[] { "Core", "CoreUObject", "Engine", "InputCore", "Kismet", "UMG"});
 
 		PrivateDependencyModuleNames.AddRange(new string[] {  });
 
