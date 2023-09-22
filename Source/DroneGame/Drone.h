@@ -64,6 +64,9 @@ protected:
 
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0), Category = Weapon)
 	float FireRange = 5000.0f;
+
+	UPROPERTY(EditDefaultsOnly, Category = Weapon, meta = (ClampMin = 0, ClampMax = 1))
+	float RecoilValue = .2f;
 #pragma endregion
 
 #pragma region FX
@@ -111,6 +114,6 @@ protected:
 	void Fire();
 
 private: 
-	TSubclassOf<UDamageType> damageTypeClass;
+	TSubclassOf<UDamageType> damageTypeClass = UDamageType::StaticClass();
 	FTimerHandle FireTimer;
 };

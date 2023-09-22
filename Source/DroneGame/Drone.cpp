@@ -2,7 +2,6 @@
 
 
 #include "Drone.h"
-#include "DrawDebugHelpers.h"
 
 
 ADrone::ADrone()
@@ -96,19 +95,24 @@ void ADrone::Fire(){
 		return;
 	}
 
-	FHitResult hit;
+	FHitResult _hit;
 
-	FVector start = Camera->GetComponentLocation();
-	FVector end = start + (Camera->GetForwardVector() * FireRange);
+	FVector _start = Camera->GetComponentLocation();
+	FVector _end = _start + (Camera->GetForwardVector() * FireRange);
 
-	FCollisionQueryParams queryParams = FCollisionQueryParams("FireTrace", false, this);
+	FCollisionQueryParams _queryParams = FCollisionQueryParams("FireTrace", false, this);
 
-	if (GetWorld()->LineTraceSingleByChannel(hit, start, end, ECC_Visibility, queryParams)) {
-		UGameplayStatics::ApplyDamage(hit.GetActor(), Damage, GetInstigatorController(), this, damageTypeClass);
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Impact, hit.Location, FRotator::ZeroRotator);
+	if (GetWorld()->LineTraceSingleByChannel(_hit, _start, _end, ECC_Visibility, _queryParams)) {
+		UGameplayStatics::ApplyDamage(_hit.GetActor(), Damage, GetInstigatorController(), this, damageTypeClass);
+		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Impact, _hit.Location, FRotator::ZeroRotator);
 	}
 
 	AmmoLeft--;
+	//FX
 	UGameplayStatics::PlaySoundAtLocation(GetWorld(), fireSound, GetActorLocation());
 	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleFlash, Mesh->GetSocketTransform("Muzzle"));
+
+	//Recoil
+	AddControllerPitchInput(-RecoilValue);
+	AddControllerYawInput(FMath::RandRange(- RecoilValue, RecoilValue));
 }

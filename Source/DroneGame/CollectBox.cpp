@@ -6,7 +6,9 @@ ACollectBox::ACollectBox() : Super()
 
 	Collider = CreateDefaultSubobject<USphereComponent>("Collider");
 	Collider->SetCollisionProfileName("OverlapOnlyPawn");
+	Collider->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
 	Collider->SetSphereRadius(65.0f);
+	Collider->SetSimulatePhysics(true);
 	RootComponent = Collider;
 
 	Mesh = CreateDefaultSubobject<UStaticMeshComponent>("Mesh");
