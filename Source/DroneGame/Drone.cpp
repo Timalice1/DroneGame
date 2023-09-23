@@ -1,6 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
-
 #include "Drone.h"
 
 
@@ -115,4 +112,20 @@ void ADrone::Fire(){
 	//Recoil
 	AddControllerPitchInput(-RecoilValue);
 	AddControllerYawInput(FMath::RandRange(- RecoilValue, RecoilValue));
+}
+
+
+//Damage
+float ADrone::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
+{
+
+	CurrentHealth -= DamageAmount;
+	if (CurrentHealth <= 0) Death();
+
+	return DamageAmount;
+}
+
+void ADrone::Death()
+{
+
 }

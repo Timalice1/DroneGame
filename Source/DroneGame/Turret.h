@@ -3,17 +3,30 @@
 #include "CoreMinimal.h"
 #include "GameFramework/Pawn.h"
 #include "Components/SkeletalMeshComponent.h"
-#include "Components/WidgetComponent.h"
-#include "Blueprint/UserWidget.h"
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystem.h"
 #include "Kismet/KismetMathLibrary.h"
+#include "DrawDebugHelpers.h"
+#include "AmmoBox.h"
+#include "Medkit.h"
 #include "Turret.generated.h"
 
 UCLASS()
 class DRONEGAME_API ATurret : public APawn
 {
 	GENERATED_BODY()
+
+	UPROPERTY()
+	USceneComponent* Root;
+
+	UPROPERTY(EditDefaultsOnly, Category = Mesh)
+	USkeletalMeshComponent* Mesh;
+
+	float CurrerntHealth;
+
+	bool bIsAlive = true;
+
+	TSubclassOf<UDamageType> damageTypeClass = UDamageType::StaticClass();
 
 public:
 	ATurret();
@@ -44,33 +57,4 @@ protected:
 		struct FDamageEvent const& DamageEvent,
 		class AController* EventInstigator,
 		AActor* DamageCauser) override;
-
-public:
-
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-	float GetCurrentHealth();
-
-	UFUNCTION(BlueprintCallable, BlueprintPure)
-	float GetMaxHealth();
-
-private:
-
-	UPROPERTY()
-	USceneComponent* Root;
-
-	UPROPERTY(EditDefaultsOnly, Category = Mesh)
-	USkeletalMeshComponent* Mesh;
-
-	UPROPERTY(EditDefaultsOnly, Category = Widget)
-	UWidgetComponent* Healthbar;
-
-	TSubclassOf<UUserWidget> HealtbarWidget;
-
-	float CurrerntHealth;
-	bool bIsAlive = true;
-
-	FTimerHandle ShootingTimer;
-
-	TSubclassOf<UDamageType> damageTypeClass = UDamageType::StaticClass();
-
 };
