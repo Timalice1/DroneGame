@@ -1,5 +1,3 @@
-// Fill out your copyright notice in the Description page of Project Settings.
-
 #pragma once
 
 #include "CoreMinimal.h"
@@ -18,15 +16,17 @@ class DRONEGAME_API ADrone : public APawn
 {
 	GENERATED_BODY()
 
+	FTimerHandle FireTimer;
+
 public:
 	ADrone();
+
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 protected:
 	virtual void BeginPlay() override;
 
 protected:
-#pragma region Components
 
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly);
 	USphereComponent* Collider;
@@ -39,10 +39,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly)
 	UCameraComponent* Camera;
 
-#pragma endregion
-
-#pragma region Movement properties
-
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0), Category = Movement)
 	float MaxSpeed = 1200.0f;
 
@@ -51,10 +47,6 @@ protected:
 
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0), Category = Movement)
 	float Deceleration = 1200.0f;
-
-#pragma endregion
-
-#pragma region Weapon properties
 
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0), Category = Weapon)
 	float FireRate = .1f;
@@ -67,9 +59,6 @@ protected:
 
 	UPROPERTY(EditDefaultsOnly, Category = Weapon, meta = (ClampMin = 0, ClampMax = 1))
 	float RecoilValue = .2f;
-#pragma endregion
-
-#pragma region FX
 
 	UPROPERTY(EditDefaultsOnly, Category = FX)
 	USoundBase* fireSound;
@@ -82,12 +71,6 @@ protected:
 	
 	UPROPERTY(EditDefaultsOnly, Category = FX)
 	UParticleSystem* Impact;
-
-
-#pragma endregion
-
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UUserWidget> DroneHUD_Widget;
 
 public:
 
@@ -105,6 +88,7 @@ public:
 
 //Actions
 protected:
+
 	void MoveForward(float AxisValue);
 	void MoveRight(float AxisValue);
 	void MoveUp(float AxisValue);
@@ -113,7 +97,9 @@ protected:
 	void StopShooting();
 	void Fire();
 
-private: 
-	TSubclassOf<UDamageType> damageTypeClass = UDamageType::StaticClass();
-	FTimerHandle FireTimer;
+	virtual float TakeDamage(float DamageAmount,
+		struct FDamageEvent const& DamageEvent,
+		class AController* EventInstigator,
+		AActor* DamageCauser) override;
+	void Death();
 };

@@ -1,7 +1,7 @@
 #include "Turret.h"
-#include "DrawDebugHelpers.h"
-#include "AmmoBox.h"
+#include "DroneGameGameModeBase.h"
 #include "Medkit.h"
+#include "AmmoBox.h"
 
 ATurret::ATurret() : Super()
 {
@@ -12,22 +12,43 @@ ATurret::ATurret() : Super()
 
 	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>("Mesh");
 	Mesh->SetupAttachment(Root);
-	Mesh->SetCollisionProfileName("Pawn");
+	Mesh->SetCollisionProfileName("BlockAll");
 
-	Healthbar = CreateDefaultSubobject<UWidgetComponent>("HealthBarWidget");
-	Healthbar->AttachToComponent(Mesh, FAttachmentTransformRules::KeepRelativeTransform);
-
+	PawnSense = CreateDefaultSubobject<UPawnSensingComponent>("PawnSense");
+	PawnSense->SightRadius = FireRange;
 }
 
 void ATurret::BeginPlay()
 {
 	Super::BeginPlay();
-	Healthbar->SetVisibility(false);
-
 	CurrerntHealth = MaxHealth;
 
-	GetWorldTimerManager().SetTimer(ShootingTimer, this, &ATurret::Attack, 2, true);
+	PawnSense->OnSeePawn.AddDynamic(this, &ATurret::OnEnemySeen);
+	TargetRotation = FRotator::ZeroRotator;
 
+	FTimerHandle _delay;
+	GetWorldTimerManager().SetTimer(_delay, this, &ATurret::StopAttack, FireRate + .1f, true);
+}
+
+void ATurret::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const
+{
+	OutLocation = Mesh->GetSocketLocation("Muzzle");
+	OutRotation = Mesh->GetSocketRotation("Muzzle");
+}
+
+void ATurret::OnEnemySeen(APawn* Pawn)
+{
+	if (!bIsAlive) return;
+
+	if (Cast<ADrone>(Pawn)) {
+
+		if (!FireTimer.IsValid()) 
+			GetWorldTimerManager().SetTimer(FireTimer, this, &ATurret::Attack, FireRate, true);
+
+		//Find aim offset rotation
+		FRotator _lookAtRotation = UKismetMathLibrary::FindLookAtRotation(Mesh->GetSocketLocation("Muzzle"), Pawn->GetActorLocation());
+		TargetRotation = UKismetMathLibrary::NormalizedDeltaRotator(_lookAtRotation, GetActorRotation());
+	}
 }
 
 void ATurret::Attack()
@@ -39,31 +60,23 @@ void ATurret::Attack()
 
 	FCollisionQueryParams _queryParams = FCollisionQueryParams("FireTrace", false, this);
 
-	DrawDebugLine(GetWorld(), _start, _end, FColor::Red, false, 1, 0U, 5);
+	DrawDebugLine(GetWorld(), _start, _end, FColor::Red, false, .1f, 0U, 5);
 	if (GetWorld()->LineTraceSingleByChannel(_hit, _start, _end, ECC_Visibility, _queryParams)) {
-
+		UGameplayStatics::ApplyDamage(_hit.GetActor(), BaseDamage, GetInstigatorController(), this, UDamageType::StaticClass());
 	}
 }
 
-float ATurret::GetCurrentHealth()
+void ATurret::StopAttack()
 {
-	return CurrerntHealth;
-}
-
-float ATurret::GetMaxHealth()
-{
-	return MaxHealth;
+	GetWorldTimerManager().ClearTimer(FireTimer);
+	TargetRotation = FRotator::ZeroRotator;
 }
 
 float ATurret::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
 	if (!bIsAlive) return 0.0f;
 
-	GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Red, "Damaged");
-	Healthbar->SetVisibility(true);
-
 	CurrerntHealth -= DamageAmount;
-
 	if (CurrerntHealth <= 0) Death();
 
 	return DamageAmount;
@@ -86,9 +99,13 @@ void ATurret::Death()
 	}
 
 	bIsAlive = false;
+	PawnSense->Deactivate();
 	Mesh->SetSimulatePhysics(true);
-	GetWorldTimerManager().ClearTimer(ShootingTimer);
 
+	//Increase player score
+	ADroneGameGameModeBase* _gameMode = (ADroneGameGameModeBase*)UGameplayStatics::GetGameMode(GetWorld());
+	_gameMode->IncreaseScore();
+
+	//Clear and invalidate all timers 
+	GetWorldTimerManager().ClearAllTimersForObject(this);
 }
-
-
