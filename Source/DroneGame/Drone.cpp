@@ -1,4 +1,5 @@
 #include "Drone.h"
+#include "DroneGameGameModeBase.h"
 
 
 ADrone::ADrone()
@@ -30,14 +31,9 @@ void ADrone::BeginPlay()
 
 	AmmoLeft = MagazineSize;
 	CurrentHealth = MaxHealth/2;
-
-
-	APlayerController* controller = GetWorld()->GetFirstPlayerController();
-	UUserWidget* DroneHUD = CreateWidget<UUserWidget>(controller, DroneHUD_Widget);
-	DroneHUD->AddToViewport();
-
 }
 
+//Player input
 void ADrone::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
 	Super::SetupPlayerInputComponent(PlayerInputComponent);
@@ -100,7 +96,7 @@ void ADrone::Fire(){
 	FCollisionQueryParams _queryParams = FCollisionQueryParams("FireTrace", false, this);
 
 	if (GetWorld()->LineTraceSingleByChannel(_hit, _start, _end, ECC_Visibility, _queryParams)) {
-		UGameplayStatics::ApplyDamage(_hit.GetActor(), Damage, GetInstigatorController(), this, damageTypeClass);
+		UGameplayStatics::ApplyDamage(_hit.GetActor(), Damage, GetInstigatorController(), this, UDamageType::StaticClass());
 		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Impact, _hit.Location, FRotator::ZeroRotator);
 	}
 
@@ -114,11 +110,9 @@ void ADrone::Fire(){
 	AddControllerYawInput(FMath::RandRange(- RecoilValue, RecoilValue));
 }
 
-
 //Damage
 float ADrone::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
 {
-
 	CurrentHealth -= DamageAmount;
 	if (CurrentHealth <= 0) Death();
 
@@ -127,5 +121,6 @@ float ADrone::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AC
 
 void ADrone::Death()
 {
-
+	ADroneGameGameModeBase* _gameMode = (ADroneGameGameModeBase*)UGameplayStatics::GetGameMode(GetWorld());
+	_gameMode->FinishGame();
 }

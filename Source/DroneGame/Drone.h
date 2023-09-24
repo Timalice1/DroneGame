@@ -16,8 +16,11 @@ class DRONEGAME_API ADrone : public APawn
 {
 	GENERATED_BODY()
 
+	FTimerHandle FireTimer;
+
 public:
 	ADrone();
+
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
 protected:
@@ -69,9 +72,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = FX)
 	UParticleSystem* Impact;
 
-	UPROPERTY(EditDefaultsOnly)
-	TSubclassOf<UUserWidget> DroneHUD_Widget;
-
 public:
 
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ClampMin = 0), Category = Weapon)
@@ -88,6 +88,7 @@ public:
 
 //Actions
 protected:
+
 	void MoveForward(float AxisValue);
 	void MoveRight(float AxisValue);
 	void MoveUp(float AxisValue);
@@ -101,9 +102,4 @@ protected:
 		class AController* EventInstigator,
 		AActor* DamageCauser) override;
 	void Death();
-
-
-private: 
-	TSubclassOf<UDamageType> damageTypeClass = UDamageType::StaticClass();
-	FTimerHandle FireTimer;
 };

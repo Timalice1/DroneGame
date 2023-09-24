@@ -7,8 +7,7 @@
 #include "Particles/ParticleSystem.h"
 #include "Kismet/KismetMathLibrary.h"
 #include "DrawDebugHelpers.h"
-#include "AmmoBox.h"
-#include "Medkit.h"
+#include "Perception/PawnSensingComponent.h"
 #include "Turret.generated.h"
 
 UCLASS()
@@ -22,19 +21,25 @@ class DRONEGAME_API ATurret : public APawn
 	UPROPERTY(EditDefaultsOnly, Category = Mesh)
 	USkeletalMeshComponent* Mesh;
 
+	UPROPERTY()
+	UPawnSensingComponent* PawnSense;
+	
+	FTimerHandle FireTimer;
+
 	float CurrerntHealth;
 
 	bool bIsAlive = true;
-
-	TSubclassOf<UDamageType> damageTypeClass = UDamageType::StaticClass();
-
+	
 public:
 	ATurret();
 
 protected:
 	virtual void BeginPlay() override;
 
-	//virtual void Tick(float DeltaTime) override;
+	virtual void GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const;
+
+	UPROPERTY(EditDefaultsOnly, meta = (ClampMin = 0), Category = Stats)
+	float MaxHealth = 1000.0f;
 
 	UPROPERTY(EditDefaultsOnly, meta = (ClampMin = 0), Category = Stats)
 	float BaseDamage = 200.0f;
@@ -43,16 +48,27 @@ protected:
 	float FireRange = 5000.0f;
 
 	UPROPERTY(EditDefaultsOnly, meta = (ClampMin = 0), Category = Stats)
-	float MaxHealth = 1000.0f;
+	float FireRate = 0.5f;
 
+	/*Delta rotation for aim offset*/
+	UPROPERTY(BlueprintReadOnly, Category = AimOffset)
+	FRotator TargetRotation;
+	
 	UPROPERTY(editDefaultsOnly, Category = FX)
 	UParticleSystem* ExplosionParticles;
 
 	UPROPERTY(editDefaultsOnly, Category = FX)
 	USoundBase* ExplosionSound;
 
+	UFUNCTION()
+	void OnEnemySeen(APawn* Pawn);
+
 	void Attack();
+
+	void StopAttack();
+
 	void Death();
+
 	virtual float TakeDamage(float DamageAmount,
 		struct FDamageEvent const& DamageEvent,
 		class AController* EventInstigator,

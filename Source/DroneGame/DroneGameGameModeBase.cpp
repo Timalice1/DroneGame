@@ -3,7 +3,13 @@
 void ADroneGameGameModeBase::BeginPlay()
 {
 	Super::BeginPlay();
-	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATurret::StaticClass(), TotalTurrets);
+	Score = 0;
+	UGameplayStatics::GetAllActorsOfClass(GetWorld(), ATurret::StaticClass(), Turrets);
+
+	if (DroneHUD_Widget_Class) {
+		DroneHUD_Widget = CreateWidget<UUserWidget>(GetWorld(), DroneHUD_Widget_Class);
+		DroneHUD_Widget->AddToViewport();
+	}
 }
 
 int ADroneGameGameModeBase::GetScore()
@@ -11,21 +17,30 @@ int ADroneGameGameModeBase::GetScore()
 	return Score;
 }
 
-int ADroneGameGameModeBase::GetTotalTurrets()
-{
-	return TotalTurrets.Num();
-}
-
 void ADroneGameGameModeBase::IncreaseScore()
 {
 	Score++;
-
-	UE_LOG(LogTemp,Warning, TEXT("%u"), Score);
-
-	if (Score == TotalTurrets.Num()) FinishGame();
+	if (Score == Turrets.Num()) FinishGame();
 }
 
 void ADroneGameGameModeBase::FinishGame()
 {
-	GEngine->AddOnScreenDebugMessage(-1, 2, FColor::Green, "Clear");
+	if (DroneHUD_Widget) 
+		DroneHUD_Widget->RemoveFromParent();
+
+	if (GameOverWidget_Class) {
+		GameOver_Widget = CreateWidget<UUserWidget>(GetWorld(), GameOverWidget_Class);
+		GameOver_Widget->AddToViewport();
+	}
+
+	//Change input mode
+	APlayerController* _controller = UGameplayStatics::GetPlayerController(GetWorld(), 0);
+	_controller->SetShowMouseCursor(true);
+	_controller->SetInputMode(FInputModeUIOnly());
+
+	//Clear and invalidate all timers for player and enemies
+	for (auto& _turret : Turrets)
+		GetWorldTimerManager().ClearAllTimersForObject(_turret);
+
+	GetWorldTimerManager().ClearAllTimersForObject(UGameplayStatics::GetPlayerPawn(GetWorld(), 0));
 }

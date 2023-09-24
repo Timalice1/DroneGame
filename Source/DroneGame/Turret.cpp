@@ -1,5 +1,7 @@
 #include "Turret.h"
 #include "DroneGameGameModeBase.h"
+#include "Medkit.h"
+#include "AmmoBox.h"
 
 ATurret::ATurret() : Super()
 {
@@ -11,12 +13,42 @@ ATurret::ATurret() : Super()
 	Mesh = CreateDefaultSubobject<USkeletalMeshComponent>("Mesh");
 	Mesh->SetupAttachment(Root);
 	Mesh->SetCollisionProfileName("BlockAll");
+
+	PawnSense = CreateDefaultSubobject<UPawnSensingComponent>("PawnSense");
+	PawnSense->SightRadius = FireRange;
 }
 
 void ATurret::BeginPlay()
 {
 	Super::BeginPlay();
 	CurrerntHealth = MaxHealth;
+
+	PawnSense->OnSeePawn.AddDynamic(this, &ATurret::OnEnemySeen);
+	TargetRotation = FRotator::ZeroRotator;
+
+	FTimerHandle _delay;
+	GetWorldTimerManager().SetTimer(_delay, this, &ATurret::StopAttack, FireRate + .1f, true);
+}
+
+void ATurret::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const
+{
+	OutLocation = Mesh->GetSocketLocation("Muzzle");
+	OutRotation = Mesh->GetSocketRotation("Muzzle");
+}
+
+void ATurret::OnEnemySeen(APawn* Pawn)
+{
+	if (!bIsAlive) return;
+
+	if (Cast<ADrone>(Pawn)) {
+
+		if (!FireTimer.IsValid()) 
+			GetWorldTimerManager().SetTimer(FireTimer, this, &ATurret::Attack, FireRate, true);
+
+		//Find aim offset rotation
+		FRotator _lookAtRotation = UKismetMathLibrary::FindLookAtRotation(Mesh->GetSocketLocation("Muzzle"), Pawn->GetActorLocation());
+		TargetRotation = UKismetMathLibrary::NormalizedDeltaRotator(_lookAtRotation, GetActorRotation());
+	}
 }
 
 void ATurret::Attack()
@@ -28,10 +60,16 @@ void ATurret::Attack()
 
 	FCollisionQueryParams _queryParams = FCollisionQueryParams("FireTrace", false, this);
 
-	DrawDebugLine(GetWorld(), _start, _end, FColor::Red, false, 1, 0U, 5);
+	DrawDebugLine(GetWorld(), _start, _end, FColor::Red, false, .1f, 0U, 5);
 	if (GetWorld()->LineTraceSingleByChannel(_hit, _start, _end, ECC_Visibility, _queryParams)) {
-
+		UGameplayStatics::ApplyDamage(_hit.GetActor(), BaseDamage, GetInstigatorController(), this, UDamageType::StaticClass());
 	}
+}
+
+void ATurret::StopAttack()
+{
+	GetWorldTimerManager().ClearTimer(FireTimer);
+	TargetRotation = FRotator::ZeroRotator;
 }
 
 float ATurret::TakeDamage(float DamageAmount, FDamageEvent const& DamageEvent, AController* EventInstigator, AActor* DamageCauser)
@@ -61,11 +99,13 @@ void ATurret::Death()
 	}
 
 	bIsAlive = false;
+	PawnSense->Deactivate();
 	Mesh->SetSimulatePhysics(true);
 
 	//Increase player score
 	ADroneGameGameModeBase* _gameMode = (ADroneGameGameModeBase*)UGameplayStatics::GetGameMode(GetWorld());
 	_gameMode->IncreaseScore();
+
+	//Clear and invalidate all timers 
+	GetWorldTimerManager().ClearAllTimersForObject(this);
 }
-
-
