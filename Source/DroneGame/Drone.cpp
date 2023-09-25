@@ -30,7 +30,7 @@ void ADrone::BeginPlay()
 	PawnMovement->MaxSpeed = MaxSpeed;
 
 	AmmoLeft = MagazineSize;
-	CurrentHealth = MaxHealth/2;
+	CurrentHealth = MaxHealth;
 }
 
 //Player input
@@ -95,15 +95,13 @@ void ADrone::Fire(){
 
 	FCollisionQueryParams _queryParams = FCollisionQueryParams("FireTrace", false, this);
 
-	if (GetWorld()->LineTraceSingleByChannel(_hit, _start, _end, ECC_Visibility, _queryParams)) {
+	if (GetWorld()->LineTraceSingleByChannel(_hit, _start, _end, ECC_Visibility, _queryParams)) 
 		UGameplayStatics::ApplyDamage(_hit.GetActor(), Damage, GetInstigatorController(), this, UDamageType::StaticClass());
-		UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), Impact, _hit.Location, FRotator::ZeroRotator);
-	}
 
 	AmmoLeft--;
 	//FX
 	UGameplayStatics::PlaySoundAtLocation(GetWorld(), fireSound, GetActorLocation());
-	UGameplayStatics::SpawnEmitterAtLocation(GetWorld(), MuzzleFlash, Mesh->GetSocketTransform("Muzzle"));
+	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, Mesh, "Muzzle");
 
 	//Recoil
 	AddControllerPitchInput(-RecoilValue);

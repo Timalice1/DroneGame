@@ -17,6 +17,11 @@ int ADroneGameGameModeBase::GetScore()
 	return Score;
 }
 
+int ADroneGameGameModeBase::GetTotalTurrets()
+{
+	return Turrets.Num();
+}
+
 void ADroneGameGameModeBase::IncreaseScore()
 {
 	Score++;

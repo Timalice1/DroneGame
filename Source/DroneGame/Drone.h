@@ -69,8 +69,6 @@ protected:
 	UPROPERTY(EditDefaultsOnly, Category = FX)
 	UParticleSystem* MuzzleFlash;
 	
-	UPROPERTY(EditDefaultsOnly, Category = FX)
-	UParticleSystem* Impact;
 
 public:
 

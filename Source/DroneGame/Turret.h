@@ -6,8 +6,9 @@
 #include "Kismet/GameplayStatics.h"
 #include "Particles/ParticleSystem.h"
 #include "Kismet/KismetMathLibrary.h"
-#include "DrawDebugHelpers.h"
-#include "Perception/PawnSensingComponent.h"
+#include "Perception/AIPerceptionComponent.h"
+#include "Perception/AISenseConfig_Sight.h"
+#include "Drone.h"
 #include "Turret.generated.h"
 
 UCLASS()
@@ -21,10 +22,13 @@ class DRONEGAME_API ATurret : public APawn
 	UPROPERTY(EditDefaultsOnly, Category = Mesh)
 	USkeletalMeshComponent* Mesh;
 
-	UPROPERTY()
-	UPawnSensingComponent* PawnSense;
+	UAIPerceptionComponent* AI_Perceprion;
 	
+	UAISenseConfig_Sight* Sight_Config;
+
 	FTimerHandle FireTimer;
+
+	ADrone* Enemy;
 
 	float CurrerntHealth;
 
@@ -39,34 +43,40 @@ protected:
 	virtual void GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const;
 
 	UPROPERTY(EditDefaultsOnly, meta = (ClampMin = 0), Category = Stats)
-	float MaxHealth = 1000.0f;
+	float MaxHealth;
 
 	UPROPERTY(EditDefaultsOnly, meta = (ClampMin = 0), Category = Stats)
-	float BaseDamage = 200.0f;
+	float BaseDamage;
 
 	UPROPERTY(EditDefaultsOnly, meta = (ClampMin = 0), Category = Stats)
-	float FireRange = 5000.0f;
+	float FireRange;
 
 	UPROPERTY(EditDefaultsOnly, meta = (ClampMin = 0), Category = Stats)
-	float FireRate = 0.5f;
+	float FireRate;
 
 	/*Delta rotation for aim offset*/
 	UPROPERTY(BlueprintReadOnly, Category = AimOffset)
 	FRotator TargetRotation;
+
+	UPROPERTY(EditDefaultsOnly, Category = FX)
+	UParticleSystem* MuzzleFlash;
+
+	UPROPERTY(EditDefaultsOnly, Category = FX)
+	USoundBase* ShootSound;
 	
-	UPROPERTY(editDefaultsOnly, Category = FX)
+	UPROPERTY(EditDefaultsOnly, Category = FX)
 	UParticleSystem* ExplosionParticles;
 
-	UPROPERTY(editDefaultsOnly, Category = FX)
+	UPROPERTY(EditDefaultsOnly, Category = FX)
 	USoundBase* ExplosionSound;
-
+	
 	UFUNCTION()
-	void OnEnemySeen(APawn* Pawn);
+	void OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus);
 
 	void Attack();
 
 	void StopAttack();
-
+	
 	void Death();
 
 	virtual float TakeDamage(float DamageAmount,

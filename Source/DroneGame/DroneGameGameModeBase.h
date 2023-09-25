@@ -39,6 +39,9 @@ public:
 	UFUNCTION(BlueprintPure, Category = Score)
 	int GetScore();
 
+	UFUNCTION(BlueprintPure, Category = Score)
+	int GetTotalTurrets();
+
 	void IncreaseScore();
 
 	void FinishGame();

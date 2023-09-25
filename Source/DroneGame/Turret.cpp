@@ -7,6 +7,11 @@ ATurret::ATurret() : Super()
 {
 	PrimaryActorTick.bCanEverTick = true;
 
+	MaxHealth = 2000.f;
+	BaseDamage = 100.f;
+	FireRange = 5000.f;
+	FireRate = .15f;
+
 	Root = CreateDefaultSubobject<USceneComponent>("DefaultRoot");
 	RootComponent = Root;
 
@@ -14,20 +19,26 @@ ATurret::ATurret() : Super()
 	Mesh->SetupAttachment(Root);
 	Mesh->SetCollisionProfileName("BlockAll");
 
-	PawnSense = CreateDefaultSubobject<UPawnSensingComponent>("PawnSense");
-	PawnSense->SightRadius = FireRange;
+
+	//Perceprion config
+	AI_Perceprion = CreateDefaultSubobject<UAIPerceptionComponent>("AI_Perception");
+	
+	Sight_Config = CreateDefaultSubobject<UAISenseConfig_Sight>("Sight sense");
+	Sight_Config->SightRadius = FireRange;
+	Sight_Config->LoseSightRadius = FireRange + 500;
+	Sight_Config->PeripheralVisionAngleDegrees = 70.f;
+	Sight_Config->SetMaxAge(.01f);
+	Sight_Config->DetectionByAffiliation.bDetectNeutrals = true;
+
+	AI_Perceprion->ConfigureSense(*Sight_Config);
+	AI_Perceprion->OnTargetPerceptionUpdated.AddDynamic(this, &ATurret::OnPerceptionUpdated);
 }
 
 void ATurret::BeginPlay()
 {
 	Super::BeginPlay();
 	CurrerntHealth = MaxHealth;
-
-	PawnSense->OnSeePawn.AddDynamic(this, &ATurret::OnEnemySeen);
 	TargetRotation = FRotator::ZeroRotator;
-
-	FTimerHandle _delay;
-	GetWorldTimerManager().SetTimer(_delay, this, &ATurret::StopAttack, FireRate + .1f, true);
 }
 
 void ATurret::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const
@@ -36,19 +47,27 @@ void ATurret::GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation)
 	OutRotation = Mesh->GetSocketRotation("Muzzle");
 }
 
-void ATurret::OnEnemySeen(APawn* Pawn)
+void ATurret::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 {
 	if (!bIsAlive) return;
 
-	if (Cast<ADrone>(Pawn)) {
+	Enemy = Cast<ADrone>(Actor);
+	if (Enemy == nullptr) return;
 
-		if (!FireTimer.IsValid()) 
-			GetWorldTimerManager().SetTimer(FireTimer, this, &ATurret::Attack, FireRate, true);
+
+	if (Stimulus.WasSuccessfullySensed()) {
 
 		//Find aim offset rotation
-		FRotator _lookAtRotation = UKismetMathLibrary::FindLookAtRotation(Mesh->GetSocketLocation("Muzzle"), Pawn->GetActorLocation());
+		FRotator _lookAtRotation = UKismetMathLibrary::FindLookAtRotation(Mesh->GetSocketLocation("Muzzle"), Enemy->GetActorLocation());
 		TargetRotation = UKismetMathLibrary::NormalizedDeltaRotator(_lookAtRotation, GetActorRotation());
+		Mesh->SetRelativeRotation(FRotator(0.f, TargetRotation.Yaw, 0.f));
+
+		if(!FireTimer.IsValid())
+			GetWorldTimerManager().SetTimer(FireTimer, this, &ATurret::Attack, FireRate, true);
 	}
+	else
+		StopAttack();
+
 }
 
 void ATurret::Attack()
@@ -60,10 +79,11 @@ void ATurret::Attack()
 
 	FCollisionQueryParams _queryParams = FCollisionQueryParams("FireTrace", false, this);
 
-	DrawDebugLine(GetWorld(), _start, _end, FColor::Red, false, .1f, 0U, 5);
-	if (GetWorld()->LineTraceSingleByChannel(_hit, _start, _end, ECC_Visibility, _queryParams)) {
+	if (GetWorld()->LineTraceSingleByChannel(_hit, _start, _end, ECC_Visibility, _queryParams)) 
 		UGameplayStatics::ApplyDamage(_hit.GetActor(), BaseDamage, GetInstigatorController(), this, UDamageType::StaticClass());
-	}
+
+	UGameplayStatics::PlaySoundAtLocation(GetWorld(), ShootSound, Mesh->GetSocketLocation("Muzzle"));
+	UGameplayStatics::SpawnEmitterAttached(MuzzleFlash, Mesh, "Muzzle");
 }
 
 void ATurret::StopAttack()
@@ -99,7 +119,6 @@ void ATurret::Death()
 	}
 
 	bIsAlive = false;
-	PawnSense->Deactivate();
 	Mesh->SetSimulatePhysics(true);
 
 	//Increase player score
