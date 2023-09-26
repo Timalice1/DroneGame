@@ -2,9 +2,8 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/GameModeBase.h"
-#include <Kismet/GameplayStatics.h>
+#include "Kismet/GameplayStatics.h"
 #include "Blueprint/UserWidget.h"
-#include "Turret.h"
 #include "Drone.h"
 #include "DroneGameGameModeBase.generated.h"
 

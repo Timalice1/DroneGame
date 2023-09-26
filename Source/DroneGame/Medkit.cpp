@@ -17,9 +17,8 @@ void AMedkit::OverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* Oth
 {
 	Super::OverlapBegin(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
 
-	ADrone* drone = (ADrone*)OtherActor;
-	if (!(drone->CurrentHealth < drone->MaxHealth)) return;
-
-	drone->CurrentHealth += FMath::RandRange((RestoreValue - RandomDeviation), (RestoreValue + RandomDeviation));
-	Destroy();
+	ADrone* _drone = (ADrone*)OtherActor;
+	float _healValue = FMath::RandRange((RestoreValue - RandomDeviation), (RestoreValue + RandomDeviation));
+	if(_drone->Heal(_healValue))
+		Destroy();
 }

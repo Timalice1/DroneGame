@@ -8,6 +8,9 @@
 #include "Kismet/KismetMathLibrary.h"
 #include "Perception/AIPerceptionComponent.h"
 #include "Perception/AISenseConfig_Sight.h"
+#include "DroneGameGameModeBase.h"
+#include "Medkit.h"
+#include "AmmoBox.h"
 #include "Drone.h"
 #include "Turret.generated.h"
 

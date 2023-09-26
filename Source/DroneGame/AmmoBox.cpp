@@ -16,10 +16,7 @@ void AAmmoBox::OverlapBegin(UPrimitiveComponent* OverlappedComponent, AActor* Ot
 {
 	Super::OverlapBegin(OverlappedComponent, OtherActor, OtherComp, OtherBodyIndex, bFromSweep, SweepResult);
 
-	ADrone* drone = (ADrone*) OtherActor;
-	if (!(drone->AmmoLeft < drone->MagazineSize)) return;
-
-	drone->AmmoLeft = drone->MagazineSize;
-	
-	Destroy();
+	ADrone* _drone = (ADrone*) OtherActor;
+	if(_drone->RestoreAmmo())
+		Destroy();
 }

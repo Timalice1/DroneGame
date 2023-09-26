@@ -18,6 +18,10 @@ class DRONEGAME_API ADrone : public APawn
 
 	FTimerHandle FireTimer;
 
+	int AmmoLeft;
+
+	float CurrentHealth;
+
 public:
 	ADrone();
 
@@ -40,25 +44,25 @@ protected:
 	UCameraComponent* Camera;
 
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0), Category = Movement)
-	float MaxSpeed = 1200.0f;
+	float MaxSpeed;
 
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0), Category = Movement)
-	float Acceleration = 800.0f;
+	float Acceleration;
 
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0), Category = Movement)
-	float Deceleration = 1200.0f;
+	float Deceleration;
 
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0), Category = Weapon)
-	float FireRate = .1f;
+	float FireRate;
 
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0), Category = Weapon)
-	float Damage = 100.0f;
+	float Damage;
 
 	UPROPERTY(EditAnywhere, meta = (ClampMin = 0), Category = Weapon)
-	float FireRange = 5000.0f;
+	float FireRange;
 
 	UPROPERTY(EditDefaultsOnly, Category = Weapon, meta = (ClampMin = 0, ClampMax = 1))
-	float RecoilValue = .2f;
+	float RecoilValue;
 
 	UPROPERTY(EditDefaultsOnly, Category = FX)
 	USoundBase* fireSound;
@@ -75,14 +79,18 @@ public:
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ClampMin = 0), Category = Weapon)
 	int MagazineSize = 50;
 
-	UPROPERTY(BlueprintReadOnly, Category = Weapon)
-	int AmmoLeft;
-
 	UPROPERTY(EditAnywhere, BlueprintReadOnly, meta = (ClampMin = 0), Category = Stats)
 	float MaxHealth = 1000.0f;
 
-	UPROPERTY(BlueprintReadOnly, Category = Stats)
-	float CurrentHealth;
+	UFUNCTION(BlueprintPure, Category = Stats)
+	int GetAmmoLeft();
+	
+	UFUNCTION(BlueprintPure, Category = Stats)
+	float GetCurrentHealth();
+
+	bool Heal(float HealValue);
+
+	bool RestoreAmmo();
 
 //Actions
 protected:

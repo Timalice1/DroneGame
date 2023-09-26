@@ -1,7 +1,4 @@
 #include "Turret.h"
-#include "DroneGameGameModeBase.h"
-#include "Medkit.h"
-#include "AmmoBox.h"
 
 ATurret::ATurret() : Super()
 {

@@ -7,6 +7,18 @@ ADrone::ADrone()
 	PrimaryActorTick.bCanEverTick = true;
 	bUseControllerRotationYaw = true;
 
+	MaxSpeed = 1500.f;
+	Acceleration = 1000.f;
+	Deceleration = 1000.f;
+	
+	FireRate = .15f;
+	FireRange = 5000.f;
+	Damage = 100.f;
+	RecoilValue = .4f;
+
+	MagazineSize = 50;
+	MaxHealth = 2000.f;
+
 	Collider = CreateDefaultSubobject<USphereComponent>("Collider");
 	Collider->SetCollisionProfileName("Pawn");
 	RootComponent = Collider;
@@ -45,6 +57,26 @@ void ADrone::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 
 	PlayerInputComponent->BindAction("Fire", IE_Pressed, this, &ADrone::StartShooting);
 	PlayerInputComponent->BindAction("Fire", IE_Released, this, &ADrone::StopShooting);
+}
+
+
+bool ADrone::Heal(float HealValue)
+{
+	if (CurrentHealth < MaxHealth) {
+		CurrentHealth += HealValue;
+		return true;
+	}
+	return false;
+}
+
+bool ADrone::RestoreAmmo()
+{
+	if (AmmoLeft < MagazineSize) {
+		AmmoLeft = MagazineSize;
+		return true;
+	}
+
+	return false;
 }
 
 //Movements
@@ -106,6 +138,16 @@ void ADrone::Fire(){
 	//Recoil
 	AddControllerPitchInput(-RecoilValue);
 	AddControllerYawInput(FMath::RandRange(- RecoilValue, RecoilValue));
+}
+
+int ADrone::GetAmmoLeft()
+{
+	return AmmoLeft;
+}
+
+float ADrone::GetCurrentHealth()
+{
+	return CurrentHealth;
 }
 
 //Damage
