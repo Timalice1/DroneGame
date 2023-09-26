@@ -42,16 +42,16 @@ protected:
 
 	virtual void GetActorEyesViewPoint(FVector& OutLocation, FRotator& OutRotation) const;
 
-	UPROPERTY(EditDefaultsOnly, meta = (ClampMin = 0), Category = Stats)
+	UPROPERTY(EditAnywhere, meta = (ClampMin = 0), Category = Stats)
 	float MaxHealth;
 
-	UPROPERTY(EditDefaultsOnly, meta = (ClampMin = 0), Category = Stats)
+	UPROPERTY(EditAnywhere, meta = (ClampMin = 0), Category = Stats)
 	float BaseDamage;
 
-	UPROPERTY(EditDefaultsOnly, meta = (ClampMin = 0), Category = Stats)
+	UPROPERTY(EditAnywhere, meta = (ClampMin = 0), Category = Stats)
 	float FireRange;
 
-	UPROPERTY(EditDefaultsOnly, meta = (ClampMin = 0), Category = Stats)
+	UPROPERTY(EditAnywhere, meta = (ClampMin = 0), Category = Stats)
 	float FireRate;
 
 	/*Delta rotation for aim offset*/

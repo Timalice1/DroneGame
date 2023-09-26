@@ -29,7 +29,7 @@ ATurret::ATurret() : Super()
 	Sight_Config->PeripheralVisionAngleDegrees = 70.f;
 	Sight_Config->SetMaxAge(.01f);
 	Sight_Config->DetectionByAffiliation.bDetectNeutrals = true;
-
+	
 	AI_Perceprion->ConfigureSense(*Sight_Config);
 	AI_Perceprion->OnTargetPerceptionUpdated.AddDynamic(this, &ATurret::OnPerceptionUpdated);
 }
@@ -56,7 +56,6 @@ void ATurret::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 
 
 	if (Stimulus.WasSuccessfullySensed()) {
-
 		//Find aim offset rotation
 		FRotator _lookAtRotation = UKismetMathLibrary::FindLookAtRotation(Mesh->GetSocketLocation("Muzzle"), Enemy->GetActorLocation());
 		TargetRotation = UKismetMathLibrary::NormalizedDeltaRotator(_lookAtRotation, GetActorRotation());
@@ -65,7 +64,7 @@ void ATurret::OnPerceptionUpdated(AActor* Actor, FAIStimulus Stimulus)
 		if(!FireTimer.IsValid())
 			GetWorldTimerManager().SetTimer(FireTimer, this, &ATurret::Attack, FireRate, true);
 	}
-	else
+	else 
 		StopAttack();
 
 }
